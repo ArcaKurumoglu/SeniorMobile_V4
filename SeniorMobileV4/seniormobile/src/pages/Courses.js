@@ -26,18 +26,16 @@ export default class Courses extends Component {
         this.state = {
             tableHead: [],
             tableTitle: [],
-            tableData: [
-
-            ],
+            tableData: [],
             courses: [],
             course: "",
             timeSlots: [],
-            instructors: []
+            instructors: [],
+            selectedCourses: [],
+            selectedTime: ""
         }
-
         this.select = this.select.bind(this);
         this.selectTimeSlot = this.selectTimeSlot.bind(this);
-
     }
 
 
@@ -46,7 +44,6 @@ export default class Courses extends Component {
             .then(response => this.setState({
                 courses: response.data
             }))
-
     }
 
     selectTimeSlot = (e) => {
@@ -65,26 +62,26 @@ export default class Courses extends Component {
         }
         const { courses } = this.state;
         const selectedCourses = [];
-        courses.map((x) => x.name == e ? selectedCourses.push([x.schedule]) : "NOO");
+        const selectedCoursesTimeSlots = [];
+        courses.map((x) => x.name == e ? selectedCoursesTimeSlots.push([x.schedule]) : "NOO");
+        courses.map((x) => x.name == e ? selectedCourses.push(x) : "NOO");
         const timeslots = [];
         courses.map((x) => x.name == e ? timeslots.push({ value: x.schedule }) : "NOO");
-
-        console.log(selectedCourses);
         this.setState({
             course: e,
-            tableData: selectedCourses,
-            timeSlots: timeslots
+            tableData: selectedCoursesTimeSlots,
+            timeSlots: timeslots,
+            selectedCourses: selectedCourses
         })
 
 
     }
 
     render() {
-        const { timeSlots, instructors, course } = this.state;
-        console.log(this.state.instructors);
-        console.log(this.state.courses);
+        const { selectedCourses, timeSlots, instructors, course, tableData } = this.state;
+        console.log(this.state.selectedCourses);
 
-        let day = [{
+        let courses = [{
             value: 'Yoga',
         }, {
             value: 'Zumba',
@@ -123,7 +120,7 @@ export default class Courses extends Component {
                     <View style={styles.dropdown}>
                         <Dropdown
                             label='Choose a Course'
-                            data={day}
+                            data={courses}
                             onChangeText={this.select} />
                         <Dropdown
                             label='Choose a Time Slot'
@@ -131,40 +128,43 @@ export default class Courses extends Component {
                             onChangeText={this.selectTimeSlot} />
                     </View>
                     <View style={styles.container2}>
-                        {instructors.map((x) =>
-                            <CollapsibleList
-                                numberOfVisibleItems={1}
-                                wrapperStyle={styles.wrapperCollapsibleList}
-                                buttonContent={
-                                    <View style={styles.button}>
-                                        <Text style={styles.buttonText}><Icon name="chevron-down" style={styles.icons} /></Text>
+                        {selectedCourses.map((x) => 
+                                <CollapsibleList
+                                    numberOfVisibleItems={1}
+                                    wrapperStyle={styles.wrapperCollapsibleList}
+                                    buttonContent={
+                                        <View style={styles.button}>
+                                            <Text style={styles.buttonText}><Icon name="chevron-down" style={styles.icons} /></Text>
+                                        </View>
+                                    }
+                                >
+                                    <View style={styles.collapsibleItem}>
+                                        <Text style={styles.announcement}><Icon name="chevron-circle-right" style={styles.icons} /> {course} / {x.level}
+                                        </Text>
                                     </View>
-                                }
-                            >
-                                <View style={styles.collapsibleItem}>
-                                    <Text style={styles.announcement}><Icon name="chevron-circle-right" style={styles.icons} /> {course} / {x.level}
-                                    </Text>
-                                </View>
-                                <View style={styles.collapsibleItem}>
-                                    <Text>Instructor : {x.name}</Text>
-                                </View>
-                                <View style={styles.collapsibleItem}>
-                                    <Text>Place : {x.place}
-                                    </Text>
-                                </View>
-                                <View style={styles.collapsibleItem}>
+                                    <View style={styles.collapsibleItem}>
+                                        <Text>Instructor : {x.name}</Text>
+                                    </View>
+                                    <View style={styles.collapsibleItem}>
+                                        <Text>Place : {x.place}
+                                        </Text>
+                                    </View>
+                                    <View style={styles.collapsibleItem}>
 
 
-                                    {/* <Text>Schedule </Text><Button title='Enroll' name="Enroll" buttonStyle={styles.enrollButtonStyle}></Button> */}
-                                    <Table borderStyle={{ borderWidth: 1 }}>
-                                        <Row data={state.tableHead} flexArr={[1, 2, 1, 1]} style={styles.head} textStyle={styles.text} />
-                                        <TableWrapper style={styles.wrapper}>
-                                            <Col data={state.tableTitle} style={styles.title} heightArr={[28, 28]} textStyle={styles.text} />
-                                            <Rows data={state.tableData} flexArr={[1, 1, 1]} style={styles.row} textStyle={styles.text} />
-                                        </TableWrapper>
-                                    </Table>
-                                </View>
-                            </CollapsibleList>)}
+                                        {/* <Text>Schedule </Text><Button title='Enroll' name="Enroll" buttonStyle={styles.enrollButtonStyle}></Button> */}
+                                        <Table borderStyle={{ borderWidth: 0 }}>
+                                            <Row data={state.tableHead} flexArr={[1, 2, 1, 1]} style={styles.head} textStyle={styles.text} />
+                                            <TableWrapper style={styles.wrapper}>
+                                                <Col data={state.tableTitle} style={styles.title} heightArr={[28, 28]} textStyle={styles.text} />
+                                                <Rows data={state.tableData} flexArr={[1, 1, 1]} style={styles.row} textStyle={styles.text} />
+                                            </TableWrapper>
+                                        </Table>
+                                    </View>
+                                </CollapsibleList>
+                            
+                        
+                        )}
                     </View>
                 </ScrollView>
             </View>

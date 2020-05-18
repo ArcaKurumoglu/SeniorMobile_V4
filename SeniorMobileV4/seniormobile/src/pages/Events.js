@@ -22,7 +22,7 @@ export default class Events extends Component {
     }
 
     componentDidMount() {
-        axios.get("http://192.168.1.20:8082/events")
+        axios.get("http://192.168.1.30:8082/events")
             .then(response => this.setState({
                 events: response.data
             })
@@ -49,12 +49,7 @@ export default class Events extends Component {
                             <Text style={styles.announcement}><Icon name="bullhorn" style={styles.icons} /> {x.title}
                             </Text>
                         </View>
-                        <View style={styles.collapsibleItem}>
-                            <Text>Start Date: {x.startdate}</Text>
-                        </View>
-                        <View style={styles.collapsibleItem}>
-                            <Text>End Date: {x.enddate}</Text>
-                        </View>
+                        
                         <View style={styles.collapsibleItem}>
                             <Text>{x.text}</Text>
                         </View>
