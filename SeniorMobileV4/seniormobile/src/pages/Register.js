@@ -147,10 +147,10 @@ class Register extends Component {
             status: 'Status'
         }
         console.log(user)
-        axios.post("http://localhost:8082/register", user)
+        axios.post("http://192.168.1.30:8082/register", user)
             .then(res => {
                 if (res.status === 200) {
-                    console.log("WORKED")
+                    alert("WORKED")
                     Actions.login()
                 }
             })

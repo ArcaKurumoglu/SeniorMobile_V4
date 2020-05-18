@@ -30,7 +30,6 @@ export default class Login extends Component {
     render() {
         return (
             <View style={styles.container}>
-
                 <Logo />
                 <Form type="Login" onPress={this.home}/>
                 <View style={styles.signupTextCont}>

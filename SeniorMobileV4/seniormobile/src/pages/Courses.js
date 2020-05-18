@@ -16,6 +16,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import CollapsibleList from "react-native-collapsible-list";
 import axios from 'axios';
 import { Table, TableWrapper, Row, Rows, Col, Cols, Cell } from 'react-native-table-component';
+import store from 'react-native-simple-store';
 
 
 
@@ -32,7 +33,10 @@ export default class Courses extends Component {
             timeSlots: [],
             instructors: [],
             selectedCourses: [],
-            selectedTime: ""
+            selectedTime: "",
+            userId:"",
+            status:"",
+            email:""
         }
         this.select = this.select.bind(this);
         this.selectTimeSlot = this.selectTimeSlot.bind(this);
@@ -40,6 +44,11 @@ export default class Courses extends Component {
 
 
     componentDidMount() {
+        store.get('user').then((res) => this.setState({
+            userId: res.id,
+            status: res.status,
+            email: res.email
+        }));
         axios.get("http://192.168.1.30:8082/courses")
             .then(response => this.setState({
                 courses: response.data
@@ -55,11 +64,13 @@ export default class Courses extends Component {
     }
 
     select = (e) => {
+
         if (e != this.state.course) {
             this.setState({
                 timeSlots: []
             })
         }
+
         const { courses } = this.state;
         const selectedCourses = [];
         const selectedCoursesTimeSlots = [];
@@ -77,7 +88,39 @@ export default class Courses extends Component {
 
     }
 
+    _onPressedButton = (x) => {
+        if(this.state.status != 'student'){
+            alert("You cannot register that without paying course fee")
+        }else{
+            alert(x);
+            let obj = {
+                "bilkentId": this.state.userId,
+                "courseId": x.id,
+                "name": x.name,
+                "instructor": x.instructor,
+                "schedule": x.schedule,
+                "level": x.level,
+                "place": x.place,
+                "quota": x.quota
+            }
+    
+            axios.post("http://192.168.1.30:8082/enrollCourse", obj)
+                .then(res => {
+                    if (res.status == 200) {
+                        alert("You have registered " + x.name);
+                    }
+                    else if (res.status == 403) {
+                        alert("You have already registered that course")
+                    }
+                }).catch(err => {
+                    alert(err);
+                });
+        }
+        
+    }
+
     render() {
+        // alert(this.state.status);
         const { selectedCourses, timeSlots, instructors, course, tableData } = this.state;
         console.log(this.state.selectedCourses);
 
@@ -128,42 +171,42 @@ export default class Courses extends Component {
                             onChangeText={this.selectTimeSlot} />
                     </View>
                     <View style={styles.container2}>
-                        {selectedCourses.map((x) => 
-                                <CollapsibleList
-                                    numberOfVisibleItems={1}
-                                    wrapperStyle={styles.wrapperCollapsibleList}
-                                    buttonContent={
-                                        <View style={styles.button}>
-                                            <Text style={styles.buttonText}><Icon name="chevron-down" style={styles.icons} /></Text>
-                                        </View>
-                                    }
-                                >
-                                    <View style={styles.collapsibleItem}>
-                                        <Text style={styles.announcement}><Icon name="chevron-circle-right" style={styles.icons} /> {course} / {x.level}
-                                        </Text>
+                        {selectedCourses.map((x) =>
+                            <CollapsibleList
+                                numberOfVisibleItems={1}
+                                wrapperStyle={styles.wrapperCollapsibleList}
+                                buttonContent={
+                                    <View style={styles.button}>
+                                        <Text style={styles.buttonText}><Icon name="chevron-down" style={styles.icons} /></Text>
                                     </View>
-                                    <View style={styles.collapsibleItem}>
-                                        <Text>Instructor : {x.name}</Text>
+                                }
+                            >
+                                <View style={styles.collapsibleItem}>
+                                    <Text style={styles.announcement}><Icon name="chevron-circle-right" style={styles.icons} /> {course} / {x.level}
+                                    </Text>
+                                </View>
+                                <View style={styles.collapsibleItem}>
+                                    <Text>Instructor : {x.name}</Text>
+                                </View>
+                                <View style={styles.collapsibleItem}>
+                                    <Text>Place : {x.place}
+                                    </Text>
+                                </View>
+                                <View style={styles.collapsibleItem}>
+                                    <View>
+                                        <Button title='Reserve' name="Reserve" onPress={() => this._onPressedButton(x)} buttonStyle={styles.enrollButtonStyle}></Button>
                                     </View>
-                                    <View style={styles.collapsibleItem}>
-                                        <Text>Place : {x.place}
-                                        </Text>
-                                    </View>
-                                    <View style={styles.collapsibleItem}>
+                                    <Table borderStyle={{ borderWidth: 0 }}>
+                                        <Row data={state.tableHead} flexArr={[1, 2, 1, 1]} style={styles.head} textStyle={styles.text} />
+                                        <TableWrapper style={styles.wrapper}>
+                                            <Col data={state.tableTitle} style={styles.title} heightArr={[28, 28]} textStyle={styles.text} />
+                                            <Rows data={state.tableData} flexArr={[1, 1, 1]} style={styles.row} textStyle={styles.text} />
+                                        </TableWrapper>
+                                    </Table>
+                                </View>
+                            </CollapsibleList>
 
 
-                                        {/* <Text>Schedule </Text><Button title='Enroll' name="Enroll" buttonStyle={styles.enrollButtonStyle}></Button> */}
-                                        <Table borderStyle={{ borderWidth: 0 }}>
-                                            <Row data={state.tableHead} flexArr={[1, 2, 1, 1]} style={styles.head} textStyle={styles.text} />
-                                            <TableWrapper style={styles.wrapper}>
-                                                <Col data={state.tableTitle} style={styles.title} heightArr={[28, 28]} textStyle={styles.text} />
-                                                <Rows data={state.tableData} flexArr={[1, 1, 1]} style={styles.row} textStyle={styles.text} />
-                                            </TableWrapper>
-                                        </Table>
-                                    </View>
-                                </CollapsibleList>
-                            
-                        
                         )}
                     </View>
                 </ScrollView>

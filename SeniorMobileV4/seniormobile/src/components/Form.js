@@ -23,6 +23,7 @@ import { Actions } from 'react-native-router-flux';
 import { Field, reduxForm } from 'redux-form';
 import InputText from "../components/InputText";
 import axios from 'axios';
+import store from 'react-native-simple-store';
 
 class Form extends Component {
 
@@ -43,10 +44,20 @@ class Form extends Component {
             password: this.state.password
         }
 
-        axios.post("http://192.168.1.31:8082/login", { user })
+        axios.post("http://192.168.1.30:8082/login", { user })
             .then(res => {
                 if (res.status === 200) {
+                    console.log(res.data);
                     Actions.home()
+                    res.data.map((x)=>{
+                        console.log(x.email);
+                        store.update('user', {
+                            id: x.bilkentId,
+                            email: x.email ,
+                            status: x.status
+                          })
+                    })
+                   
                 }
             });
     }

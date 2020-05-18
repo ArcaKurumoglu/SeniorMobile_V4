@@ -12,7 +12,7 @@ export default class Routes extends Component {
 
             <Router>
                 <Stack key="root" hideNavBar={true}>
-                    <Scene key="login" component={Home} title="Login" initial={true} />
+                    <Scene key="login" component={Login} title="Login" initial={true} />
                     <Scene key="register" component={Register} title="Register" />
                     <Scene key="home" component={Home} title="Home" />
                 </Stack>

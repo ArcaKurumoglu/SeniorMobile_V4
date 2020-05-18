@@ -7,16 +7,17 @@
  */
 
 import React, { Component } from 'react';
-import { StyleSheet, AppRegistry, View, Text, TouchableOpacity, Platform, FlatList, Image, SafeAreaView, ScrollView } from 'react-native';
-import { Header,  Button  } from 'react-native-elements';
+import { StyleSheet, AppRegistry, View, Text, TouchableOpacity, Platform, FlatList, Image, SafeAreaView, ScrollView, CheckBox } from 'react-native';
+import { Header, Button } from 'react-native-elements';
 import { Dropdown } from 'react-native-material-dropdown';
 import axios from 'axios';
 import CollapsibleList from "react-native-collapsible-list";
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import store from 'react-native-simple-store';
 
 const initialState = {
-    selectedLanes:[],
-    appointments:[],
+    selectedLanes: [],
+    appointments: [],
     tableHead: [],
     tableTitle: [],
     tableData: [],
@@ -34,10 +35,13 @@ const initialState = {
     third: [],
     list: [],
     sport: "",
-    fourth:[],
-    racketSports:[],
-    contentData:[],
-    fourthFieldData:[]
+    fourth: [],
+    racketSports: [],
+    contentData: [],
+    fourthFieldData: [],
+    userId:'',
+    email:'',
+    ge:false
 };
 
 const reservationtype = [{
@@ -87,12 +91,12 @@ const campus = [{
 }]
 
 const lanes = [
-    { value: "Lane 1"}, 
-    { value: "Lane 2"}, 
-    { value: "Lane 3"}, 
-    { value: "Lane 4"}, 
-    { value: "Lane 5"}, 
-    { value: "Lane 6"}
+    { value: "Lane 1" },
+    { value: "Lane 2" },
+    { value: "Lane 3" },
+    { value: "Lane 4" },
+    { value: "Lane 5" },
+    { value: "Lane 6" }
 ]
 
 const racketSports = [
@@ -106,7 +110,7 @@ export default class Reservations extends Component {
     constructor(props) {
         super(props);
         this.state = initialState
-        
+
 
         // this.select = this.select.bind(this);
         // this.selectTimeSlot = this.selectTimeSlot.bind(this);
@@ -114,8 +118,10 @@ export default class Reservations extends Component {
         this.selectSecond = this.selectSecond.bind(this);
         this.selectFourth = this.selectFourth.bind(this);
         this.reset = this.reset.bind(this);
-
+        this._onPressedButton = this._onPressedButton.bind(this);
+        // this.resetSecond = this.resetSecond.bind(this);
     }
+
     reset() {
         this.setState(initialState);
     }
@@ -135,6 +141,10 @@ export default class Reservations extends Component {
         let textSecond = "";
         let textThird = "";
         let slots = [];
+        store.get('user').then((res) => this.setState({
+            userId: res.id,
+            email: res.email
+        }));
         this.reset();
         console.log(this.state);
         axios.get("http://192.168.1.30:8082/" + restype)
@@ -160,7 +170,7 @@ export default class Reservations extends Component {
                     sec = campus;
                     textSecond = "Choose a Campus";
                     textThird = "Choose a Sport";
-                }else if (restype == "appointments"){
+                } else if (restype == "appointments") {
                     response.data.map((x) => {
                         let obj = { value: '' }
                         obj.value = x.time
@@ -186,13 +196,31 @@ export default class Reservations extends Component {
 
     }
 
+    // resetSecond(){
+    //     this.setState({
+    //         campus: '',
+    //         third: [],
+    //         fourth: ""
+    //     })
+    // }
+
     selectSecond = (e) => {
         // if(e.toLowerCase() != this.state.campus && this.state.campus != "" ){
         //     this.setState({
         //         third:[]
         //     })
         // }
+        // this.resetSecond();
+        const {campus} = this.state;
         let campSelected = e.toLowerCase();
+
+        // if(campus != campSelected){
+        //     this.setState({
+        //         campus: '',
+        //         third: [],
+        //         fourth: ""
+        //     })
+        // }
         let { reservationType } = this.state;
         // console.log(reservationType);
         if (reservationType == "tournaments") {
@@ -212,9 +240,9 @@ export default class Reservations extends Component {
             this.setState({
                 campus: campSelected,
                 third: court,
-                fourth:"Choose a racket sport"
+                fourth: "Choose a racket sport"
             })
-        }else if(reservationType == "appointments"){
+        } else if (reservationType == "appointments") {
             this.setState({
                 campus: campSelected
             })
@@ -227,49 +255,59 @@ export default class Reservations extends Component {
         let arr = [];
         console.log(e);
         let sport = e.toLowerCase().replace(" ", "").toString();
+        
         if (reservationType == "tournaments") {
-            resData.map((x) => {
-                let obj = {}
-                if (x.campus.toLowerCase() == campus && x.name.toLowerCase() == sport) {
-                    obj = x;
-                    arr.push(obj);
-                }
-            })
-            console.log(arr);
+            if(sport == 'racketsports'){
+                alert(e)
+                this.setState({
+                    text4: "Choose a sport"
+                })
+            }else{
+                alert("Turnuvar", e)
+                resData.map((x) => {
+                    let obj = {}
+                    if (x.campus.toLowerCase() == campus && x.name.toLowerCase() == sport) {
+                        obj = x;
+                        arr.push(obj);
+                    }
+                })
+            }
             this.setState({
                 sport: sport,
                 fourth: racketSports,
-                contentData: arr
+                contentData: arr,
             })
+            
         } else if (reservationType == "sportcourts") {
             let courtSport = e.toLowerCase()
+            alert(courtSport);
             axios.get("http://192.168.1.30:8082/" + courtSport)
                 .then(response => {
                     this.setState({
                         courts: response.data
                     })
                 })
-        }else if(reservationType == "appointments"){
+        } else if (reservationType == "appointments") {
             let slot = e.toLowerCase();
             let arr = []
-            resData.map((x)=>{
-                if(x.time == slot){
+            resData.map((x) => {
+                if (x.time == slot) {
                     arr.push(x);
                 }
             })
             this.setState({
-                appointments:arr
+                appointments: arr
             })
-        }else if(reservationType == "pool"){
+        } else if (reservationType == "pool") {
             let slot = e.toLowerCase();
             let arr = []
-            resData.map((x)=>{
-                if(x.time == slot){
+            resData.map((x) => {
+                if (x.time == slot) {
                     arr.push(x);
                 }
             })
             this.setState({
-                selectedLanes:arr
+                selectedLanes: arr
             })
         }
 
@@ -278,34 +316,107 @@ export default class Reservations extends Component {
         })
     }
 
-    Capitalize(str){
+    Capitalize(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
-    selectFourth = (e) =>{
-        const {resData, campus} = this.state;
+    selectFourth = (e) => {
+        const { resData, campus } = this.state;
         let sport = e.toLowerCase().replace(" ", "").toString();
         let arr = [];
-        resData.map((x)=> {
-            if(x.name.toLowerCase() == sport && x.campus.toLowerCase() == campus)
+        resData.map((x) => {
+            if (x.name.toLowerCase() == sport && x.campus.toLowerCase() == campus)
                 arr.push(x)
         })
         console.log(resData);
         axios.get("http://192.168.1.30:8082/" + sport)
-                .then(response => {
-                    if(response.status == 200){
-                        this.setState({
-                            fourthFieldData: response.data
-                        })
-                    }else if(response.data == 500){
-                        this.setState({
-                            fourthFieldData: []
-                        })
-                    }
-                })
+            .then(response => {
+                if (response.status == 200) {
+                    this.setState({
+                        fourthFieldData: response.data
+                    })
+                } else if (response.data == 500) {
+                    this.setState({
+                        fourthFieldData: []
+                    })
+                }
+            })
     }
+
+    _onPressedButton = (x) => {
+        let obj = {}
+        alert(x.name);
+        const {reservationType, userId,email} = this.state;
+        if (reservationType == "tournaments"){
+            // this.state.sport !=
+            obj  = {
+                name:x.name,
+                campus:x.campus,
+                teamquota:x.teamquota,
+                team:"Agri",
+                bilkentId: userId,
+                email: email,
+                ge: true
+            }
+
+            axios.post("http://192.168.1.30:8082/enrollTournament", obj)
+            .then(res => {
+                if (res.status == 200) {
+                    alert(res.data);
+                }
+                else{
+                    alert("You have already reserved that slot");
+                }
+            }).catch(err => {
+                alert(err);
+            });
+        }else if(reservationType == "appointments"){
+            alert("APPOINTMENT");
+            obj = {
+                'bilkentId': parseInt(this.state.userId),
+                'appointmentId' : x.id,
+                'name' :  x.name,
+                'place' :  x.place,
+                'time' : x.time
+            };
+        axios.post("http://192.168.1.30:8082/makeAppointment", obj)
+            .then(res => {
+                if (res.status == 200) {
+                    alert("You have reserved that slot");
+                }
+                else{
+                    alert(res.data)
+                }
+            }).catch(err => {
+                alert(err);
+            });
+        }else if(reservationType == "pool"){
+            obj = {
+                'bilkentId': parseInt(this.state.userId),
+                'poolId' : x.id,
+            };
+        axios.post("http://192.168.1.30:8082/reservePool", obj)
+            .then(res => {
+                if (res.status == 200) {
+                    alert("You have reserved lane " + x.id);
+                }
+                else{
+                    alert(res.data)
+                }
+            }).catch(err => {
+                alert(err);
+            });
+        }
+        
+    }
+
+    checkBox = (e) =>{
+        console.log(e);
+    }
+
     render() {
-        const { second, third, fourth, text2, text3, text4, resData, list, reservationType, sport, contentData, campus, appointments, selectedLanes} = this.state;
+
+        const { second, third, ge, fourth, text2, text3, text4, resData, list, reservationType, sport, contentData, campus, appointments, selectedLanes, courts } = this.state;
         console.log(this.state);
         return (
             <View style={styles.container}>
@@ -338,64 +449,24 @@ export default class Reservations extends Component {
                                     onChangeText={this.selectFourth}
                                 /> : <View></View>
                         }
+                        {
+                            reservationType == "tournaments" ? 
+                                <CheckBox
+                                    title='GE-250 / GE-251'
+                                    checked={this.state.ge}
+                                    onPress={() => this.checkBox}
+                                /> : <View></View>
+                        }
 
                     </View>
+
                     <View style={styles.container3}>
 
                         <View style={styles.container5}>
-                        <ScrollView>
-                            {
-                                reservationType == "tournaments" && sport != "racketsports" ? this.state.contentData.map((x) => {
-                                    if(x.name.toLowerCase() == sport && x.campus.toLowerCase() == campus){
-                                        return (<CollapsibleList
-                                            numberOfVisibleItems={1}
-                                            wrapperStyle={styles.wrapperCollapsibleList}
-                                            buttonContent={
-                                                <View style={styles.button}>
-                                                    <Text style={styles.buttonText}><Icon name="chevron-down" style={styles.icons} /></Text>
-                                                </View>
-                                            }
-                                        >
-                                            <View style={styles.collapsibleItem}>
-                                                <Text style={styles.announcement}><Icon name="chevron-circle-right" style={styles.icons} />{x.name}</Text>
-                                            </View>
-                                            <View style={styles.collapsibleItem}>
-                                                <Text>Instructor : BASKETBALL</Text>
-                                            </View>
-                                            <View style={styles.collapsibleItem}>
-                                                <Text>Place : MAIN</Text>
-                                            </View>
-
-
-                                        </CollapsibleList>
-)                                    }                  
-                                }): this.state.fourthFieldData.map((x) => {
-                                            return (<CollapsibleList
-                                                numberOfVisibleItems={1}
-                                                wrapperStyle={styles.wrapperCollapsibleList}
-                                                buttonContent={
-                                                    <View style={styles.button}>
-                                                        <Text style={styles.buttonText}><Icon name="chevron-down" style={styles.icons} /></Text>
-                                                    </View>
-                                                }
-                                            >
-                                                <View style={styles.collapsibleItem}>
-                                                    <Text style={styles.announcement}><Icon name="chevron-circle-right" style={styles.icons} />{x.courtNo}</Text>
-                                                </View>
-                                                <View style={styles.collapsibleItem}>
-                                                    <Text>Court No: {x.courtNo}</Text>
-                                                </View>
-                                                <View style={styles.collapsibleItem}>
-                                                    <Text>Time : {x.time}</Text>
-                                                </View>
-    
-    
-                                            </CollapsibleList>)
-                                       }
-                                    
-                                    )
-                                    }
-                                    {reservationType == "appointments" ? appointments.map((x)=> {
+                            <ScrollView>
+                                {
+                                    reservationType == "tournaments" && sport != "racketsports" ? this.state.contentData.map((x) => {
+                                        if (x.name.toLowerCase() == sport && x.campus.toLowerCase() == campus) {
                                             return (<CollapsibleList
                                                 numberOfVisibleItems={1}
                                                 wrapperStyle={styles.wrapperCollapsibleList}
@@ -409,46 +480,130 @@ export default class Reservations extends Component {
                                                     <Text style={styles.announcement}><Icon name="chevron-circle-right" style={styles.icons} />{x.name}</Text>
                                                 </View>
                                                 <View style={styles.collapsibleItem}>
-                                                    <Text>Campus: {x.place}</Text>
+                                                    <Text>Instructor : BASKETBALL</Text>
                                                 </View>
                                                 <View style={styles.collapsibleItem}>
-                                                    <Text>Time : {x.time}</Text>
+                                                    <Text>Place : MAIN</Text>
                                                 </View>
-    
-    
-                                            </CollapsibleList>)
-                                       }) : <View></View>
+                                                <View>
+                                                    <Button title='Enroll' name="Reserve" onPress={() => this._onPressedButton(x)} buttonStyle={styles.enrollButtonStyle}></Button>
+                                                </View>
 
+                                            </CollapsibleList>
+                                            )
+                                        }
+                                    }) : this.state.fourthFieldData.map((x) => {
+                                        return (<CollapsibleList
+                                            numberOfVisibleItems={1}
+                                            wrapperStyle={styles.wrapperCollapsibleList}
+                                            buttonContent={
+                                                <View style={styles.button}>
+                                                    <Text style={styles.buttonText}><Icon name="chevron-down" style={styles.icons} /></Text>
+                                                </View>
+                                            }
+                                        >
+                                            <View style={styles.collapsibleItem}>
+                                                <Text style={styles.announcement}><Icon name="chevron-circle-right" style={styles.icons} />{x.courtNo}</Text>
+                                            </View>
+                                            <View style={styles.collapsibleItem}>
+                                                <Text>Court No: {x.courtNo}</Text>
+                                            </View>
+                                            <View style={styles.collapsibleItem}>
+                                                <Text>Time : {x.time}</Text>
+                                            </View>
+                                            <View>
+                                                <Button title='Enroll' name="Reserve" onPress={() => this._onPressedButton(x)} buttonStyle={styles.enrollButtonStyle}></Button>
+                                            </View>
+
+                                        </CollapsibleList>)
                                     }
-                                    {reservationType == "pool" ? selectedLanes.map((x)=> {
-                                            return (<CollapsibleList
-                                                numberOfVisibleItems={1}
-                                                wrapperStyle={styles.wrapperCollapsibleList}
-                                                buttonContent={
-                                                    <View style={styles.button}>
-                                                        <Text style={styles.buttonText}><Icon name="chevron-down" style={styles.icons} /></Text>
-                                                    </View>
-                                                }
-                                            >
-                                                <View style={styles.collapsibleItem}>
-                                                    <Text style={styles.announcement}><Icon name="chevron-circle-right" style={styles.icons} />{x.lane}</Text>
-                                                </View>
-                                                <View style={styles.collapsibleItem}>
-                                                    <Text>Quota: {x.quota}</Text>
-                                                </View>
-                                                <View style={styles.collapsibleItem}>
-                                                    <Text>Time : {x.time}</Text>
-                                                </View>
-                                                <Button title='Enroll' name="Reserve" buttonStyle={styles.enrollButtonStyle}></Button>
-    
-    
-                                            </CollapsibleList>)
-                                       }) : <View></View>
 
-                                    }
-                                    </ScrollView>
+                                    )
+                                }
+                                {reservationType == "appointments" ? appointments.map((x) => {
+                                    return (<CollapsibleList
+                                        numberOfVisibleItems={1}
+                                        wrapperStyle={styles.wrapperCollapsibleList}
+                                        buttonContent={
+                                            <View style={styles.button}>
+                                                <Text style={styles.buttonText}><Icon name="chevron-down" style={styles.icons} /></Text>
+                                            </View>
+                                        }
+                                    >
+                                        <View style={styles.collapsibleItem}>
+                                            <Text style={styles.announcement}><Icon name="chevron-circle-right" style={styles.icons} />{x.name}</Text>
+                                        </View>
+                                        <View style={styles.collapsibleItem}>
+                                            <Text>Campus: {x.place}</Text>
+                                        </View>
+                                        <View style={styles.collapsibleItem}>
+                                            <Text>Time : {x.time}</Text>
+                                        </View>
+                                        <View>
+                                            <Button title='Reserve' name="Reserve" onPress={() => this._onPressedButton(x)} buttonStyle={styles.enrollButtonStyle}></Button>
+                                        </View>
+                                    </CollapsibleList>)
+                                }) : <View></View>
 
-                            
+                                }
+                                {reservationType == "pool" ? selectedLanes.map((x) => {
+                                    return (<CollapsibleList
+                                        numberOfVisibleItems={1}
+                                        wrapperStyle={styles.wrapperCollapsibleList}
+                                        buttonContent={
+                                            <View style={styles.button}>
+                                                <Text style={styles.buttonText}><Icon name="chevron-down" style={styles.icons} /></Text>
+                                            </View>
+                                        }
+                                        >
+                                        <View style={styles.collapsibleItem}>
+                                            <Text style={styles.announcement}><Icon name="chevron-circle-right" style={styles.icons} />{x.lane}</Text>
+                                        </View>
+                                        <View style={styles.collapsibleItem}>
+                                            <Text>Quota: {x.quota}</Text>
+                                        </View>
+                                        <View style={styles.collapsibleItem}>
+                                            <Text>Time : {x.time}</Text>
+                                        </View>
+                                        <View>
+                                            <Button title='Reserve' name="Reserve" onPress={() => this._onPressedButton(x)} buttonStyle={styles.enrollButtonStyle}></Button>
+                                        </View>
+
+
+                                    </CollapsibleList>)
+                                }) : <View></View>
+                                }
+                                {reservationType == "sportcourts" ? courts.map((x) => {
+                                    return (<CollapsibleList
+                                        numberOfVisibleItems={1}
+                                        wrapperStyle={styles.wrapperCollapsibleList}
+                                        buttonContent={
+                                            <View style={styles.button}>
+                                                <Text style={styles.buttonText}><Icon name="chevron-down" style={styles.icons} /></Text>
+                                            </View>
+                                        }
+                                    >
+                                        <View style={styles.collapsibleItem}>
+                                            <Text style={styles.announcement}><Icon name="chevron-circle-right" style={styles.icons} />{x.courtNo}</Text>
+                                        </View>
+                                        <View style={styles.collapsibleItem}>
+                                            <Text>Available: {x.available}</Text>
+                                        </View>
+                                        <View style={styles.collapsibleItem}>
+                                            <Text>Time : {x.time}</Text>
+                                        </View>
+                                        <View>
+                                            <Button title='Reserve' name="Reserve" onPress={() => this._onPressedButton(x)} buttonStyle={styles.enrollButtonStyle}></Button>
+                                        </View>
+
+
+                                    </CollapsibleList>)
+                                }) : <View></View>
+
+                                }
+                            </ScrollView>
+
+
                         </View>
 
                     </View>
